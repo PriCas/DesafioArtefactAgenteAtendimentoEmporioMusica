@@ -1,6 +1,22 @@
+
+# Virtual Environments
+# Isolamento de dependências do Python para não enviar pacotes instalados ao repositório
 venv/
+
+
+# Arquivos de Compilação e Cache (Python)
+# Bytecode gerado pelo interpretador Python para acelerar execuções futuras
 __pycache__/
 *.pyc
+
+# Configurações de Ambiente e Segredo
+# Contém variáveis de ambiente e chaves secretas que nunca devem ser commitadas
 .env
+
+# Arquivos do Sistema Operacional
+# Metadados de visualização de pastas gerados automaticamente pelo macOS
 .DS_Store
+
+# Cache de Ferramentas de Teste
+# Dados temporários gerados pelo Pytest para otimizar a execução de testes
 .pytest_cache/
