@@ -1,0 +1,37 @@
+google-generativeai>=0.8.0
+pandas>=2.0.0
+pypdf>=4.0.0
+rich>=13.0.0
+python-dotenv>=1.0.0
+streamlit>=1.30.0
+# DEPENDÊNCIAS DO PROJETO - EMPÓRIO DA MÚSICA (DESAFIO TÉCNICO ARTEFACT)
+
+# 1. Provedor de LLM e Agente Conversacional
+# SDK oficial do Google Gemini: responsável pelo raciocínio da IA, gerenciamento
+# de sessões de chat com histórico e execução automática de ferramentas (Function Calling).
+google-generativeai>=0.8.0
+
+# 2. Manipulação e Ingestão de Dados Tabulares
+# Utilizado para carregar os arquivos CSV da operação (produtos, pedidos, clientes,
+# promoções) e transferi-los estruturadamente para o banco SQLite em memória.
+pandas>=2.0.0
+
+# 3. Extração e RAG de Dados Não-Estruturados
+# Biblioteca leve em Python puro para extrair o texto do manual interno de políticas
+# (PDF de 8 páginas), permitindo a quebra em chunks e a busca semântica/lexical.
+pypdf>=4.0.0
+
+# 4. Interface de Linha de Comando (CLI) Rica
+# Formatação visual no terminal: renderiza Markdown nas respostas do agente,
+# cria caixas de diálogo estilizadas (Panels) e loaders de carregamento de status.
+rich>=13.0.0
+
+# 5. Segurança e Governança de Configurações
+# Carrega automaticamente as credenciais e variáveis do arquivo local .env
+# (como GEMINI_API_KEY e REFERENCE_DATE) para o os.environ, sem expor segredos no Git.
+python-dotenv>=1.0.0
+
+# 6. Interface Gráfica Web para Demonstração
+# Framework interativo para rodar o chat em navegador web (app.py), facilitando
+# a validação visual do agente e a captura de telas para a documentação técnica.
+streamlit>=1.30.0
