@@ -101,8 +101,8 @@ Scenario 4: E-Commerce Return & Freight Policy (CDC 7 Days)
 Scenario 5: Negative Scope Guardrail (Accessory Refusal)
 ![Imagem](prints/img5.jpg)
 Additional Edge Cases & Live Demonstrations
-![Imagem](prints/img6.jpg)
-![Imagem](prints/img7.jpg)
+![Imagem](prints/img8.1.jpg)
+![Imagem](prints/img8.2.jpg)
 
 ## ⚖️ Known Limitations & Production Roadmap
 LGPD 2FA Authentication: Enforce customer verification (SMS OTP or CPF validation) before exposing tracking details.
