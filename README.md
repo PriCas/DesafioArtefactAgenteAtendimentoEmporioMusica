@@ -8,36 +8,18 @@ This project delivers an end-to-end conversational AI solution for **Empório da
 
 ## 🏛️ System Architecture & Decision Flow
 
-The solution follows a modular, framework-agnostic design powered by **Native Function Calling**, ensuring deterministic execution, minimal latency, and zero data leakage:
-code
-Code
-┌───────────────────────────────┐
-              │       Customer Message        │
-              └───────────────┬───────────────┘
-                              │
-                              ▼
-  ┌──────────────────────────────────────────────────────┐
-  │  Full-Stack UI Layer: Terminal CLI & Streamlit App   │
-  └───────────────────────────┬──────────────────────────┘
-                              │
-                              ▼
-  ┌──────────────────────────────────────────────────────┐
-  │  Agent Core: Google Gemini + Rolling Memory Buffer    │
-  └───────────────────────────┬──────────────────────────┘
-                              │
-     ┌────────────────────────┼────────────────────────┐
-     │                        │                        │
-     ▼                        ▼                        ▼
-┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
-│ Catalog Tool │ │ Order Tool │ │ Policy Tool │
-│ (SQLite / Pandas)│ │ (SQLite Joins) │ │ (Semantic RAG) │
-└────────┬─────────┘ └────────┬─────────┘ └────────┬─────────┘
-│ │ │
-▼ ▼ ▼
-Products & Promotions Orders & Tracking Policies & Legal CDC
-(Deterministic Match) (Relational Integrity) (Chunk-based Retrieval)
-code
-Code
+The solution follows a clean, modular design structured into four decoupled layers:
+
+```text
+[Customer Message] ➔ [CLI / Streamlit UI] ➔ [Gemini Agent Core + Memory]
+                                                   │
+        ┌──────────────────────────────────────────┼──────────────────────────────────────────┐
+        ▼                                          ▼                                          ▼
+ [Catalog & Promos]                         [Order Tracking]                           [Store Policies]
+ SQLite In-Memory Database                  Relational SQL Joins                       Topical PDF Retrieval
+ • Real-time stock availability             • Order delivery status                    • CDC 7-day return rules
+ • Accurate pricing & active discounts      • Carrier tracking codes                   • Warranty & business hours
+ • Strict PIX 5% rule (non-cumulative)      • Items and customer match                 • Sanitary exceptions (mouthpieces)
 ---
 
 ## ⚙️ Technical Decisions & Trade-Off Analysis
