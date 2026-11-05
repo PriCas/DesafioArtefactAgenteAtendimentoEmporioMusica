@@ -163,7 +163,7 @@ class DatabaseManager:
         """
         cursor = self.conn.cursor()
         cursor.execute(sql, params)
-        return [dict(row) for row in cursor.fetchall()]
+        return [dict(row) for row in cursor.fetchall()] 
 
 
 # Instância única (Singleton) para ser compartilhada entre as ferramentas (tools) do agente
