@@ -132,9 +132,6 @@ streamlit run app.py
 O repositório inclui registros completos de conversas cobrindo cenários simples e complexos dentro do arquivo:
 📁 examples/conversas_exemplo.md
 Cenário 1: Consulta com filtro numérico de preço e categoria ("Quais opções de violões disponíveis custando até R$ 1.000?").
-
-![print](prints/img1.jpg)
-
 Cenário 2: Informações institucionais, endereço físico e horário de funcionamento.
 Cenário 3: Consulta de preço com promoção expirada e cálculo do desconto PIX (Takamine GD20).
 Cenário 4: Aplicação das regras do Código de Defesa do Consumidor para devoluções online.
@@ -152,5 +149,13 @@ Em consonância com as orientações do desafio, foram utilizados assistentes de
 Arquitetura e Scaffolding: Estruturação inicial do banco de dados em memória e geração de templates de tipagem para as ferramentas de function calling.
 Engenharia de Prompt: Refinamento iterativo das instruções de sistema para reforçar os guardrails negativos de catálogo (não vender acessórios).
 
+### Interação
+![print](prints/img1.jpg)
+![print](prints/img2.jpg)
+![print](prints/img3.jpg)
+![print](prints/img4.jpg)
+![print](prints/img5.jpg)
+![print](prints/img6.jpg)
+![print](prints/img7.jpg)
 
 *Feito com rigor, Python e muito café. Desenvolvido para o Desafio Artefact.*
