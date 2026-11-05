@@ -53,7 +53,7 @@ cd DesafioArtefactAgenteAtendimentoEmporioMusica
 # Create and activate virtual environment
 python -m venv venv
 .\venv\Scripts\Activate.ps1   # On Windows PowerShell
-# source venv/bin/activate    # On Linux / macOS / Git Bash
+  source venv/bin/activate    # On Linux / macOS / Git Bash
 
 # 2. Install Dependencies
 code
@@ -89,7 +89,9 @@ Scenario 5: Negative scope intercept (graceful rejection of guitar picks and str
 ## 📸 Verified Interaction Evidence (Screenshots)
 Below are the actual screenshots demonstrating the agent handling operational queries and domain guardrails in real time:
 Scenario 1: Catalog Filtering (Guitars up to R$ 1,000)
-![Imagem](prints/img1.jpg)
+![Imagem](prints/img1.1.jpg)
+![Imagem](prints/img1.2.jpg)
+![Imagem](prints/img1.3.jpg)
 Scenario 2: Store Information & Operating Hours
 ![Imagem](prints/img2.jpg)
 Scenario 3: Real-Time Pricing & Expired Promotion Check (Takamine GD20)
