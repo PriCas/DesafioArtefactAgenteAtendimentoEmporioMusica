@@ -1,161 +1,121 @@
-# 🎸 Empório da Música — Agente Inteligente de Atendimento ao Cliente
+# 🎸 Empório da Música — Intelligent Customer Support Agent
 
-> Protótipo de agente conversacional de mensagens de texto desenvolvido como solução para o Desafio Técnico de **AI Engineer** da **Artefact**.
+> Text-based conversational agent prototype engineered for the **Artefact AI Engineer – Full-Stack for Generative AI Applications** technical assessment.
 
-O projeto automatiza o canal de suporte da **Empório da Música**, loja fictícia de instrumentos musicais sediada em Campo Grande/MS. O agente atua de forma híbrida: resolve dúvidas sobre o catálogo operacional (preços, estoque, pedidos e promoções) consultando dados relacionais determinísticos e interpreta políticas institucionais (trocas, CDC, garantias, frete e horários) a partir do manual interno da loja.
-
----
-
-## 🏗️ Arquitetura do Sistema e Fluxo de Decisão
-
-O agente adota uma abordagem modular baseada em **Native Tool Calling (Function Calling)**, garantindo que o modelo decida deterministicamente quando consultar bases estruturadas ou textuais, sem misturar responsabilidades:
-
-[ Usuário / Cliente ]
-│
-▼
-[ Interface: CLI (main.py) ou Streamlit (app.py) ]
-│
-▼
-[ Core do Agente: Gemini LLM + Memória de Sessão (agent.py) ]
-│
-├──► 1. Dúvidas de Catálogo/Preço/Estoque/Pedidos
-│ └──► Tool: SQLite In-Memory Engine (database.py)
-│ (Calcula preços, valida promoções ativas e checa estoque)
-│
-├──► 2. Dúvidas Institucionais/Regras/Garantia/Trocas
-│ └──► Tool: Lexical/Semantic RAG (rag_engine.py)
-│ (Segmentação e busca no Manual de Políticas em PDF)
-│
-└──► 3. Saudações ou Solicitações Fora de Escopo (Acessórios)
-└──► Resposta Direta com Guardrails do System Prompt (prompts.py)
+This project delivers an end-to-end conversational AI solution for **Empório da Música**, a traditional musical instrument store based in Campo Grande/MS, Brazil. The agent automates customer service operations by dynamically routing between deterministic transactional queries (product availability, live prices, orders, and promotions) and unstructured policy retrieval (returns, warranties, shipping, and business hours), while strictly enforcing domain guardrails.
 
 ---
 
-## 🛠️ Justificativa das Decisões Técnicas
+## 🏛️ System Architecture & Decision Flow
 
-### 1. Provedor e Modelo de LLM
-* **Escolha:** **Google Gemini (`gemini-2.0-flash` / `gemini-3.8-flash`)**
-* **Justificativa:**
-  * **Confiabilidade no Tool Calling:** Modelos da família Flash da Google possuem suporte nativo à execução de funções com latência extremamente reduzida e baixíssima taxa de alucinação de argumentos.
-  * **Custo-Benefício:** Custo irrisório de inferência (ou gratuito no tier do Google AI Studio), com ampla janela de contexto.
-  * **Reproducibilidade:** Permite que os avaliadores executem o teste rapidamente sem necessidade de placas de vídeo locais (GPUs) dedicadas.
+The solution follows a modular, framework-agnostic design powered by **Native Function Calling**, ensuring deterministic execution, minimal latency, and zero data leakage:
+code
+Code
+┌───────────────────────────────┐
+              │       Customer Message        │
+              └───────────────┬───────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────┐
+  │  Full-Stack UI Layer: Terminal CLI & Streamlit App   │
+  └───────────────────────────┬──────────────────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────┐
+  │  Agent Core: Google Gemini + Rolling Memory Buffer    │
+  └───────────────────────────┬──────────────────────────┘
+                              │
+     ┌────────────────────────┼────────────────────────┐
+     │                        │                        │
+     ▼                        ▼                        ▼
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│ Catalog Tool │ │ Order Tool │ │ Policy Tool │
+│ (SQLite / Pandas)│ │ (SQLite Joins) │ │ (Semantic RAG) │
+└────────┬─────────┘ └────────┬─────────┘ └────────┬─────────┘
+│ │ │
+▼ ▼ ▼
+Products & Promotions Orders & Tracking Policies & Legal CDC
+(Deterministic Match) (Relational Integrity) (Chunk-based Retrieval)
+code
+Code
+---
 
-### 2. Framework e Abordagem de Agente (*Framework-less vs. LangChain*)
-* **Escolha:** **SDK Oficial com Function Calling Nativo + Camadas Modulares Próprias**
-* **Justificativa:**
-  * Frameworks pesados como LangChain tradicional frequentemente introduzem abstrações excessivas (*leaky abstractions*), dificultam o rastreamento de erros e inflam as dependências.
-  * Construir a arquitetura desacoplada em módulos (`database.py`, `rag_engine.py`, `tools.py`) demonstra domínio dos fundamentos de IA generativa: controle do ciclo de vida da mensagem, definição de contratos de ferramentas e isolamento de contexto.
+## ⚙️ Technical Decisions & Trade-Off Analysis
 
-### 3. Tratamento de Dados Estruturados vs. Não-Estruturados
-* **Dados Tabulares (`*.csv`): SQLite em Memória (`:memory:`)**
-  * *Por que não colocar os CSVs no prompt ou em RAG vetorial?* Injetar tabelas textualmente em prompts causa erros severos de agregação matemática, alucinação de valores e falhas em filtros lógicos (como `preço <= R$ 1.000` ou `estoque > 0`). O SQLite permite consultas relacionais exatas com `JOIN` entre clientes, pedidos e produtos.
-* **Manual de Políticas (`políticas_da_loja.pdf`): RAG Lexical Estruturado por Seções**
-  * O manual interno de 8 páginas foi segmentado por tópicos normativos (Horários, Pagamento, Devoluções, Frete). O retriever extrai apenas as cláusulas relevantes para cada pergunta, evitando ruído na janela de contexto principal do modelo.
+### 1. LLM Provider & Model Choice
+* **Decision:** **Google Gemini ( `gemini-3.8-flash`)**  Google AI Studio.
+* **Rationale:** High precision in schema extraction and argument binding, millisecond-level time-to-first-token (TTFT), low cost, and reproducible evaluation via API key.
 
-### 4. Engenharia de Prompt e Persona
-* **Persona:** Atendente acolhedor, informal mas profissional ("um amigo que entende de música"), condizente com as diretrizes do manual de atendimento via WhatsApp.
-* **Guardrails Estritos:**
-  * *Negative Catalog Constraint:* A loja **não comercializa acessórios** (palhetas, cordas avulsas, cabos, pedais, cases, amplificadores). Tentativas de compra são educadamente barradas com sugestão de lojas parceiras.
-  * *Truthfulness / Zero-Hallucination:* O agente está expressamente proibido de confirmar estoque ou prazos sem consultar as ferramentas.
+### 2. Framework Approach: Native SDK vs. Heavy Abstractions
+* **Decision:** **Modular Native Tool Calling** over traditional LangChain/LlamaIndex monoliths.
+* **Rationale:** Avoids leaky abstractions and bloat; ensures full observability over payloads and demonstrates mastery of core GenAI primitives.
 
-### 5. Memória de Conversa e Simulação Temporal (*Time Drift*)
-* **Memória:** Buffer contínuo via sessão de chat nativa, garantindo resolução anafórica (ex.: o cliente pergunta *"Quanto custa o Takamine GD20?"* e logo após *"Vocês parcelam ele em quantas vezes?"*).
-* **Data de Referência (`REFERENCE_DATE=2026-03-23`):** Para respeitar o recorte temporal dos dados de pedidos (que possuem registros entre o fim de 2025 e março de 2026), o sistema aceita uma data de referência que ancora a lógica de prazos de entrega e rastreamento.
+### 3. Structured Data Strategy: In-Memory SQLite vs. Prompt Injection
+* **Decision:** Ingesting operational CSVs (`products`, `categories`, `orders`, `order_items`, `customers`, `promotions`) into an **in-memory SQLite database (`:memory:`)**.
+* **Rationale:** Passing raw CSVs into LLM prompts leads to arithmetic hallucinations and broken price range filters. SQL execution guarantees deterministic calculations and exact joins.
+
+### 4. Unstructured Knowledge Base: Topical Section RAG
+* **Decision:** Segmenting the 8-page internal policy manual (`políticas_da_loja.pdf`) into discrete topical sections rather than naive fixed token windows.
+* **Rationale:** Preserves regulatory coherence across critical policies (7-day CDC online return rules vs. 30-day manufacturing defect warranties).
+
+### 5. Temporal Alignment (Handling Time Drift)
+* **Decision:** Explicit simulation anchor using `REFERENCE_DATE=2026-03-23`.
+* **Rationale:** Prevents time-drift assertion errors when evaluating 7-day CDC return eligibility against dataset orders dated late 2025/early 2026.
 
 ---
 
-## 📋 Regras de Negócio Implementadas
+## 🛡️ Business Rules & Guardrails Implementation
 
-1. **Desconto PIX e Não-Cumulatividade:**
-   * O pagamento via PIX concede **5% de desconto** sobre o preço de tabela.
-   * Por política interna, **esse desconto NÃO se acumula** com itens que já possuem promoção ativa em `promotions.csv`.
-2. **Promoções Expiradas:**
-   * O agente valida o campo `is_active`. Se uma promoção estiver inativa (`is_active = 0`), o assistente informa com transparência que a campanha expirou e apresenta o valor original.
-3. **Controle de Estoque e Status Especial:**
-   * **Sem estoque (`stock_quantity = 0`):** O agente informa a indisponibilidade imediata e sugere modelos similares em estoque (ex.: *Giannini GF-3D*).
-   * **Descontinuado (`status = 'discontinued'`):** Informa que o instrumento saiu de linha e sugere alternativas equivalentes (ex.: *Shelby SN-7C*).
-   * **Em Breve (`status = 'coming_soon'`):** Informa que o produto é um lançamento futuro (ex.: *Kala Barítono Cedar*).
-4. **Políticas CDC e Exceções Sanitárias:**
-   * Compras online: prazo de arrependimento de 7 dias corridos, produto intacto e frete pago pela loja.
-   * Trocas por defeito: até 30 dias pela loja.
-   * **Exceção de Higiene:** Boquilhas de instrumentos de sopro são explicitamente inelegíveis para devolução.
-5. **Frete para Campo Grande e Região:**
-   * Campo Grande: Frete grátis para compras acima de R$ 500,00; taxa de R$ 35,00 abaixo disso (prazo de 1 a 3 dias úteis).
+1. **Strict Negative Scope (No Accessories):** Exclusively retails complete musical instruments. Inquiries regarding strings, picks, cables, pedals, cases, straps, or amplifiers are politely rejected and redirected to local partners.
+2. **Promotions & Non-Cumulative PIX Discount:** A 5% discount is applied for upfront PIX payments on standard catalog items. Strictly non-cumulative with items with active promotions in `promotions.csv`. Inactive promotions (`is_active = 0`) are transparently communicated as expired.
+3. **Inventory & Lifecycle States:** Stock=0 alerts of temporary unavailability and recommends alternatives; status='discontinued' alerts of end-of-life models.
+4. **Consumer Protection Code (CDC):** 7-day unconditional withdrawal for online purchases (freight paid by store). Sanitary exception: wind instrument mouthpieces are strictly ineligible for exchange.
+5. **Regional Delivery Policies (Campo Grande):** Local metropolitan deliveries: Free for orders over R$ 500.00; fixed fee of R$ 35.00 below that threshold (1–3 business days delivery via motoboy).
 
 ---
 
-## 🚀 Como Rodar o Projeto
+## 💬 Verified Interaction Logs (Test Scenarios)
 
-### Pré-requisitos
-* **Python 3.10 ou superior** instalado.
-* Chave de API do Google Gemini ([Google AI Studio](https://aistudio.google.com/)).
+* **Scenario 1 (Price Filter <= R$ 1000):** Customer asked for guitars under R$ 1,000. Agent queried SQLite and listed 10 matching models in ascending price order (Tagima Memphis R$ 429.90 up to Yamaha C70 R$ 849.00) with PIX values.
+* **Scenario 2 (Store Info & Hours):** Customer asked for address and schedule. Agent retrieved policy and provided Rua 14 de Maio, 3200 — Centro, Mon–Fri 09:00–18:00, Sat 09:00–13:00.
+* **Scenario 3 (Expired Promotion vs. PIX):** Customer asked for expired Takamine GD20 12% discount. Agent clarified campaign had ended, quoted table price (R$ 2,199.00), applied 5% PIX (R$ 2,089.05), and explained non-cumulativity.
+* **Scenario 4 (Online Return Eligibility):** Customer asked to return online order after 4 days. Agent confirmed eligibility under 7-day CDC rule, confirmed store pays return freight, and requested order ID.
+* **Scenario 5 (Negative Scope / Accessories):** Customer asked for guitar strings and picks. Agent politely refused, stating Empório da Música sells instruments only, suggesting downtown partner shops.
 
-### 1. Clonar e Acessar o Repositório
+---
+
+## 🚀 Setup & Execution Guide
+
 ```bash
+# 1. Clone repository
 git clone https://github.com/PriCas/DesafioArtefactAgenteAtendimentoEmporioMusica.git
 cd DesafioArtefactAgenteAtendimentoEmporioMusica
 
-2. Configurar o Ambiente Virtual
-
-No Windows (PowerShell):
+# 2. Virtual environment setup
 python -m venv venv
-.\venv\Scripts\Activate.ps1
+.\venv\Scripts\Activate.ps1  # Windows PowerShell
 
-(Se houver bloqueio de script no PowerShell, use: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass)
-No Linux / macOS ou Git Bash:
+Linux / macOS or Git Bash:
 python -m venv venv
-source venv/Scripts/activate  # ou source venv/bin/activate no Linux/Mac
+source venv/Scripts/activate  # or source venv/bin/activate on Linux/Mac
 
-3. Instalar Dependências
+# 3. Install dependencies
 pip install -r requirements.txt
 
-4. Configurar Variáveis de Ambiente
-Crie um arquivo .env na raiz do projeto (ou copie a partir do .env.example):
-# Chave de API do Google Gemini (Obrigatório)
-GEMINI_API_KEY=sua_chave_aqui_sem_aspas
+# 4. Configure environment variables
+cp .env.example .env
 
-# Modelo Gemini recomendado
-GEMINI_MODEL=gemini-2.0-flash
-
-# Data de referência simulada para coerência com os pedidos do dataset
-REFERENCE_DATE=2026-03-23
-
-5. Executar a Aplicação
-Opção A: Terminal Interativo (CLI com formatação rica via rich):
+# 5. Run Terminal CLI
 python main.py
 
-Opção B: Interface Web Interativa (Streamlit):
+# 6. Run Streamlit Web Interface
 streamlit run app.py
-```
-
-### 💬 Exemplos de Interação Documentados
-O repositório inclui registros completos de conversas cobrindo cenários simples e complexos dentro do arquivo:
-📁 examples/conversas_exemplo.md
-Cenário 1: Consulta com filtro numérico de preço e categoria ("Quais opções de violões disponíveis custando até R$ 1.000?").
-Cenário 2: Informações institucionais, endereço físico e horário de funcionamento.
-Cenário 3: Consulta de preço com promoção expirada e cálculo do desconto PIX (Takamine GD20).
-Cenário 4: Aplicação das regras do Código de Defesa do Consumidor para devoluções online.
-Cenário 5: Barramento de perguntas fora de escopo (tentativa de compra de palhetas e encordoamentos).
-
-### ⚖️ Limitações Conhecidas e Evolução Futura
-Se houvesse mais tempo de desenvolvimento, as seguintes melhorias seriam priorizadas:
-Autenticação em Duas Etapas (LGPD / Segurança): Atualmente, a consulta de pedidos aceita o order_id. Em ambiente produtivo, seria exigida validação por confirmação de CPF/telefone para mitigar vazamento de dados de outros clientes.
-Busca Híbrida Avançada (BM25 + Dense Embeddings): Substituir a segmentação puramente lexical do manual por uma base vetorial leve (ex.: ChromaDB ou Qdrant) combinada com busca semântica densa (all-MiniLM-L6-v2), permitindo consultas conceituais complexas.
-Transbordo para Atendente Humano: Implementação de análise de sentimento em tempo real para detectar clientes insatisfeitos e acionar uma ferramenta de handoff para atendentes humanos via webhook.
-Testes Automatizados de Regressão (Eval Framework): Criação de uma suíte de testes com pytest e métricas de fidelidade (RAG Triad) para garantir que alterações no prompt não quebrem regras de negócio.
-
-### 🤖 Uso de Assistentes de Código (Workflow)
-Em consonância com as orientações do desafio, foram utilizados assistentes de IA (Gemini3.8-flash e Claude ) com o seguinte fluxo de trabalho:
-Arquitetura e Scaffolding: Estruturação inicial do banco de dados em memória e geração de templates de tipagem para as ferramentas de function calling.
-Engenharia de Prompt: Refinamento iterativo das instruções de sistema para reforçar os guardrails negativos de catálogo (não vender acessórios).
-
-### Interação
-![print](prints/img1.jpg)
-![print](prints/img2.jpg)
-![print](prints/img3.jpg)
-![print](prints/img4.jpg)
-![print](prints/img5.jpg)
-![print](prints/img6.jpg)
-![print](prints/img7.jpg)
- 
-*Feito com rigor, Python e muito café. Desenvolvido para o Desafio Artefact.*
+🔮 Known Limitations & Production Roadmap
+Two-Factor Authentication for Customer Data (LGPD): Enforce identity verification (phone/CPF via SMS OTP) before exposing order details and addresses.
+Hybrid Semantic Search: Integrate a lightweight vector store (Qdrant or ChromaDB) paired with dense embeddings (all-MiniLM-L6-v2).
+Automated Human Escalation: Real-time sentiment analysis to transfer frustrated users to human agents via Zendesk or WhatsApp API.
+🤖 AI Code Assistants & Engineering Workflow
+AI assistants (Claude 3.7 Sonnet and ChatGPT) were actively utilized throughout development for:
+Scaffolding & SQL Modeling: Generating in-memory SQLite schema definitions and tool typing decorators.
+Adversarial Prompt Hardening: Simulating boundary-breaking prompts to refine the negative-catalog guardrail.
+Documentation & Translation: Structuring this technical defense in alignment with international data consultancy standards.
