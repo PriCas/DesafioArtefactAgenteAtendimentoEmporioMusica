@@ -133,7 +133,7 @@ O repositório inclui registros completos de conversas cobrindo cenários simple
 📁 examples/conversas_exemplo.md
 Cenário 1: Consulta com filtro numérico de preço e categoria ("Quais opções de violões disponíveis custando até R$ 1.000?").
 
-![print](prints/para/img1.jpg)
+![print](prints/img1.jpg)
 
 Cenário 2: Informações institucionais, endereço físico e horário de funcionamento.
 Cenário 3: Consulta de preço com promoção expirada e cálculo do desconto PIX (Takamine GD20).
