@@ -157,5 +157,5 @@ Engenharia de Prompt: Refinamento iterativo das instruções de sistema para ref
 ![print](prints/img5.jpg)
 ![print](prints/img6.jpg)
 ![print](prints/img7.jpg)
-
+ 
 *Feito com rigor, Python e muito café. Desenvolvido para o Desafio Artefact.*
