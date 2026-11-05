@@ -132,6 +132,7 @@ streamlit run app.py
 O repositório inclui registros completos de conversas cobrindo cenários simples e complexos dentro do arquivo:
 📁 examples/conversas_exemplo.md
 Cenário 1: Consulta com filtro numérico de preço e categoria ("Quais opções de violões disponíveis custando até R$ 1.000?").
+
 ![print](prints/para/img1.jpg)
 
 Cenário 2: Informações institucionais, endereço físico e horário de funcionamento.
